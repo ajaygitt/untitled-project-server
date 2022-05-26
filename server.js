@@ -1,22 +1,21 @@
-let express = require("express");
-let cors = require("cors");
-let mongoose = require("mongoose");
-let fs = require("fs");
-const fileupload = require("express-fileupload");
+import express from "express";
+import cors from "cors";
+import mongoose from "mongoose";
+import { readdirSync } from "fs";
 const morgan = require("morgan");
-// import cookieParser from "cookie-parser";
-const path = require("path");
-const app = express();
+import cookieParser from "cookie-parser";
+
 require("dotenv").config();
-const cookieParser = require("cookie-parser");
-app.use(cookieParser());
-const usersRouter = require("./routes/user");
-const adminRouter = require("./routes/admin");
+var fileupload = require("express-fileupload");
+const path = require("path");
+//...
 
-app.use(fileupload());
+// create express app
+const app = express();
+const server = require("http").createServer(app);
 
+const graphqlHTTP = require("express-graphql");
 // connect DB
-// use this "process.env.LOCAL_MONGO_DB" connection string for local db
 mongoose
   .connect(process.env.MONGO_DB, {
     useNewUrlParser: true,
@@ -27,23 +26,21 @@ mongoose
   .then(() => console.log("MongoDB is connected"))
   .catch((err) => console.log("DB CONNECTION ERROR", err));
 
-  
 // apply middlewares
-app.use(cors({ credentials: true, origin: process.env.FRONT_END_URL }));
-
+app.use(cors());
 //serve static files
 app.use(express.static("images"));
-
+app.use(fileupload());
 app.use("/images", express.static(path.join(__dirname, "/images")));
 app.use(express.json({ limit: "50mb" }));
 app.use(morgan("dev"));
 
-app.use("/", usersRouter);
-app.use("/admin", adminRouter);
-// // route - This func is for importing routes files automaticaly. so we dont need to import separately
-// fs.readdirSync("./routes").map((r) => app.use("/", require(`./routes/${r}`)));
+app.use(cookieParser());
+
+// route - This func is for importing routes files automaticaly. so we dont need to import separately
+readdirSync("./routes").map((r) => app.use("/api", require(`./routes/${r}`)));
 
 // port
-const port = process.env.PORT || 2000;
+const port = process.env.PORT || 8000;
 
-app.listen(port, () => console.log(`Server is running on port ${port}`));
+server.listen(port, () => console.log(`Server is running on port ${port}`));
