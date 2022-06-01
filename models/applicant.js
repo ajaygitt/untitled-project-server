@@ -8,7 +8,7 @@ const applicantSchema = new Schema(
       trim: true,
       required: true,
     },
-    email: {
+    contactNo: {
       type: String,
       trim: true,
       required: true,

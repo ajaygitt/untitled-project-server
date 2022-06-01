@@ -48,10 +48,8 @@ export const login = async (req, res) => {
     let emailExists = await user.findOne({ email: req.body.email });
 
     if (emailExists) {
-      let passwordMatch = await bcrypt.compare(
-        req.body.password,
-        emailExists.password
-      );
+      let passwordMatch = await bcrypt.compare(req.body.password, emailExists.password);
+      console.log("match",passwordMatch)
       if (passwordMatch) {
         // login successfull
 
