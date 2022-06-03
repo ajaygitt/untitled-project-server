@@ -1,3 +1,4 @@
+import applicant from "../models/applicant";
 import jobOpening from "../models/jobOpening";
 
 const user = require("../models/user");
@@ -116,5 +117,27 @@ console.log("-",data)
     return res
       .status(400)
       .json({ error: true, message: "something went wrong" });
+  }
+}
+
+export const applyForJob=async(req,res)=>{
+
+  try{
+
+    console.log("req.",req.body)
+    console.log("req.",req.files)
+
+    let jobDetails=await jobOpening.findOne({url:req.body.openingUrl})
+  let applicantValues=req.body.otherDetails
+    let applicant=new applicant({
+      name:applicantValues.name,
+      contactNo:applicantValues.contactNo,
+
+
+    })
+  }
+  catch(err)
+  {
+
   }
 }
