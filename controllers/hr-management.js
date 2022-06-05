@@ -1,5 +1,6 @@
 import applicant from "../models/applicant";
 import jobOpening from "../models/jobOpening";
+import { s3FileUpload } from "../utils/fileUpload";
 
 const user = require("../models/user");
 
@@ -65,14 +66,13 @@ export const createOpening = async (req, res) => {
       status: 1,
     });
     if (urlAlreadyExist) {
-      console.log("ues")
+      console.log("ues");
       return res.json({
         error: true,
         message: "Entered title already exists ! try with another title",
       });
-    }
-    else{
-      console.log("OKu")
+    } else {
+      console.log("OKu");
     }
     let job = new jobOpening({
       title: req.body.title,
@@ -95,7 +95,7 @@ export const createOpening = async (req, res) => {
 
 export const getOpening = async (req, res) => {
   try {
-    let data = await jobOpening.find().sort({createdAt:-1});
+    let data = await jobOpening.find().sort({ createdAt: -1 });
 
     return res.json({ error: false, data: data });
   } catch (err) {
@@ -105,39 +105,50 @@ export const getOpening = async (req, res) => {
   }
 };
 
-export const getJobInfo=async(req,res)=>{
-
-  try{
-    let data = await jobOpening.findOne({url:req.params.title});
-console.log("-",data)
+export const getJobInfo = async (req, res) => {
+  try {
+    let data = await jobOpening.findOne({ url: req.params.title });
+    console.log("-", data);
     return res.json({ error: false, data: data });
-  }
-  catch(err)
-  {
+  } catch (err) {
     return res
       .status(400)
       .json({ error: true, message: "something went wrong" });
   }
-}
+};
 
-export const applyForJob=async(req,res)=>{
+export const submitApplication = async (req, res) => {
+  try {
+    console.log("body", req.body);
+    console.log("file", req.files);
 
-  try{
-
-    console.log("req.",req.body)
-    console.log("req.",req.files)
-
-    let jobDetails=await jobOpening.findOne({url:req.body.openingUrl})
-  let applicantValues=req.body.otherDetails
-    let applicant=new applicant({
-      name:applicantValues.name,
-      contactNo:applicantValues.contactNo,
-
-
-    })
+    let fileUrl = await s3FileUpload(req);
+    console.log("final fileurl", fileUrl);
+    let findJob = await jobOpening.findOne({ url: req.body.openingUrl });
+    let application = new applicant({
+      name: req.body.fullName,
+      contactNo: req.body.contactNo,
+      resume: fileUrl,
+      jobId: findJob._id,
+    });
+    application.save();
+    return res.json({ error: false, message: "applied successfully" });
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(400)
+      .json({ error: true, message: "something went wrong" });
   }
-  catch(err)
-  {
+};
 
+export const getApplicantList = async (req, res) => {
+  try {
+    console.log(req.params)
+    let data = await applicant.find({ jobId: req.params.id }).sort({ createdAt: -1 });
+    return res.status(200).json({ error: false, data: data });
+  } catch (err) {
+    return res
+      .status(400)
+      .json({ error: true, message: "something went wrong" });
   }
-}
+};
